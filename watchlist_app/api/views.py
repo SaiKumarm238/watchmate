@@ -27,6 +27,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 #django_filters
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+
+#pagination
+from .pagination import WatchListPagination, WatchListLOPagination, WatchListCursorPagination
 
 #Generic 
 class UserReview(generics.ListAPIView):
@@ -182,6 +186,21 @@ class Watch_Catch_ListAV(APIView):
             #return Response(serializer.data)
             return Response(results, status=status.HTTP_201_CREATED)
 
+# For Testing the Filt & Filtering & Search
+class WatchListLAV(generics.ListAPIView):
+    queryset = WatchList.objects.all()
+    serializer_class = WatchListSerializer
+    pagination_class = WatchListCursorPagination
+    #permission_classes = [IsAuthenticated]
+    #throttle_classes = [ReviewListThrottle]
+    # filter_backends = [DjangoFilterBackend] #Filter
+    # filterset_fields = ['title', 'platform__name']
+    # filter_backends = [filters.SearchFilter] # SearchFilter
+    # search_fields = ['title', 'platform__name']
+    # filter_backends = [filters.OrderingFilter] #OrderingFilter
+    # ordering_fields = ['avg_rating']
+
+
 
 class WatchListAV(APIView):
     permission_classes = [IsAdminOrReadOnly]
@@ -207,6 +226,7 @@ class WatchDetailAV(APIView):
     def get(self, request,pk):
         try:
             movie = WatchList.objects.get(pk=pk)
+            
         except WatchList.DoesNotExist:
             return Response({'Error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = WatchListSerializer(movie)
