@@ -207,7 +207,6 @@ class WatchListAV(APIView):
     
     def get(self, request):
         movies = WatchList.objects.all()
-        print(movies)
         serializer = WatchListSerializer(movies, many =True)
         return Response(serializer.data)
     
