@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'watchmate.wsgi.application'
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
+#         'NAME': str(os.path.join(BASE_DIR, "db.sqlite3"))
 #     }
 # }
 
@@ -99,15 +99,15 @@ DATABASES = {
 
 
 # Redis Cache 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         }
+#     }
+# }
 
 
 # Password validation
@@ -169,18 +169,18 @@ REST_FRAMEWORK = {
     #     'rest_framework.throttling.UserRateThrottle'
     # ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '5/day',
+        'anon': '100/day',
         # 'user': '10/day',
-        'review-create': '1/day',
-        'review-list': '10/day',
+        'review-create': '100/day',
+        'review-list': '200/day',
     },
     
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     # 'PAGE_SIZE': 5,
     
-    'DEFAULT_RENDERER_CLASSES': (
-    'rest_framework.renderers.JSONRenderer',
-    ),
+    # 'DEFAULT_RENDERER_CLASSES': (
+    # 'rest_framework.renderers.JSONRenderer',
+    # ),
     
     
 }

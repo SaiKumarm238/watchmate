@@ -17,13 +17,13 @@ from rest_framework import generics
 from .permissions import IsAdminOrReadOnly, IsReviewUserOrReadOnly
 
 #Throttling
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle, ScopedRateThrottle
 from .throttling import ReviewCreateThrottle, ReviewListThrottle
-# To cache the data
-from django.core.cache import cache
-from django.conf import settings
-from django.core.cache.backends.base import DEFAULT_TIMEOUT
-CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
+# # To cache the data
+# from django.core.cache import cache
+# from django.conf import settings
+# from django.core.cache.backends.base import DEFAULT_TIMEOUT
+# CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 #django_filters
 from django_filters.rest_framework import DjangoFilterBackend
@@ -36,7 +36,7 @@ from .pagination import WatchListPagination, WatchListLOPagination, WatchListCur
 class UserReview(generics.ListAPIView):
     # queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    # permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     # throttle_classes = [ReviewListThrottle, AnonRateThrottle]
 
     # def get_queryset(self):
@@ -46,19 +46,6 @@ class UserReview(generics.ListAPIView):
     def get_queryset(self):
         username = self.request.query_params.get('username', None)
         return Review.objects.filter(review_user__username=username)
-
-
-class ReviewList(generics.ListAPIView):
-    #queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
-    #permission_classes = [IsAuthenticated]
-    throttle_classes = [ReviewListThrottle]
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['review_user__username', 'active']
-
-    def get_queryset(self):
-        pk = self.kwargs['pk']
-        return Review.objects.filter(watchlist=pk)
 
 class ReviewCreate(generics.CreateAPIView):
     serializer_class = ReviewSerializer
@@ -78,7 +65,7 @@ class ReviewCreate(generics.CreateAPIView):
         if review_queryset.exists():
             raise ValidationError("You have allready reviewed this Movie")
         
-        if watchlist.number_rating ==0:
+        if watchlist.number_rating == 0:
             watchlist.avg_rating = serializer.validated_data['rating']
         else:
             watchlist.avg_rating = (watchlist.avg_rating + serializer.validated_data['rating'])/2
@@ -88,11 +75,24 @@ class ReviewCreate(generics.CreateAPIView):
 
         serializer.save(watchlist=watchlist, review_user=review_user)
 
+class ReviewList(generics.ListAPIView):
+    #queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    #permission_classes = [IsAuthenticated]
+    throttle_classes = [ReviewListThrottle]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['review_user__username', 'active']
+
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return Review.objects.filter(watchlist=pk)
+
+
 class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsReviewUserOrReadOnly]
-    throttle_classes = [UserRateThrottle,AnonRateThrottle]
+    # throttle_classes = [UserRateThrottle,AnonRateThrottle]
  
 
 ##Mixins 
@@ -172,19 +172,19 @@ class StreamPlatformDetailAV(APIView):
 
 
 
-class Watch_Catch_ListAV(APIView):
-    def get(self, request):
-        if 'movie' in cache:
-            movies = cache.get('movie')
-            return Response(movies, status=status.HTTP_200_OK)
-        else:
-            movies = WatchList.objects.all()
-            results = [movie.to_json() for movie in movies]
-            #store dsta in catche
-            cache.set('movie', results, timeout=CACHE_TTL)
-            #serializer = WatchListSerializer(movies, many =True)
-            #return Response(serializer.data)
-            return Response(results, status=status.HTTP_201_CREATED)
+# class Watch_Catch_ListAV(APIView):
+#     def get(self, request):
+#         if 'movie' in cache:
+#             movies = cache.get('movie')
+#             return Response(movies, status=status.HTTP_200_OK)
+#         else:
+#             movies = WatchList.objects.all()
+#             results = [movie.to_json() for movie in movies]
+#             #store dsta in catche
+#             cache.set('movie', results, timeout=CACHE_TTL)
+#             #serializer = WatchListSerializer(movies, many =True)
+#             #return Response(serializer.data)
+#             return Response(results, status=status.HTTP_201_CREATED)
 
 # For Testing the Filt & Filtering & Search
 class WatchListLAV(generics.ListAPIView):
